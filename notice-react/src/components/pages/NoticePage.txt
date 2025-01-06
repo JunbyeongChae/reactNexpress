@@ -1,0 +1,33 @@
+import React, { useState } from 'react'
+import Header from '../include/Header'
+import Footer from '../include/Footer'
+import NoticeList from '../notice/NoticeList'
+//공지사항 게시판
+const NoticePage = () => {
+
+  const [notices, setNotices] = useState([
+    {n_no: 1, n_title:'공지제목1', n_writer:'관리자', n_content:'제목1 내용'},
+    {n_no: 2, n_title:'공지제목2', n_writer:'총무부', n_content:'제목2 내용'},
+    {n_no: 3, n_title:'공지제목3', n_writer:'영업부', n_content:'제목3 내용'}
+  ])
+  const [notices2, setNotices2] = useState({
+    '1':
+    {n_no: 1, n_title:'공지제목1', n_writer:'관리자', n_content:'제목1 내용'},
+    '2':
+    {n_no: 2, n_title:'공지제목2', n_writer:'총무부', n_content:'제목2 내용'},
+    '3':
+    {n_no: 3, n_title:'공지제목3', n_writer:'영업부', n_content:'제목3 내용'},
+  })
+
+  const [notices3, setNotices3] = useState([])
+
+  return (
+    <>
+      <Header />
+      <NoticeList notices={notices} notices2={notices2} notices3={notices3} />
+      <Footer />
+    </>
+  )
+}
+
+export default NoticePage
