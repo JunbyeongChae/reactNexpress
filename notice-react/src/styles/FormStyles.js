@@ -10,7 +10,7 @@ export const LoginForm = styled.form`
   max-width: 450px;
   width: 30%;
   min-width: 350px;
-  padding: 80px 30px 80px 30px;
+  padding: 40px 30px 40px 30px;
   border-radius: 30px;
   margin: 150px 0px 150px 0px;
   border: 2px solid lightgrey;
@@ -25,8 +25,8 @@ export const SignupForm = styled(LoginForm)`
 
   
 export const MyH1 = styled.h1`
-  font-size: 38px;
-  margin-bottom:60px;
+  font-size: 34px;
+  margin-bottom:40px;
   font-weight: 20px;
   text-align: center;
 `;
@@ -51,7 +51,7 @@ export const MyLabel = styled.label`
   font-size: 14px;
   color: #414149;
   display: block;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 `; 
 
 export const MyLabelAb = styled(MyLabel)`
@@ -104,6 +104,15 @@ export const WarningButton = styled(SubmitButton)`
 export const GoogleButton = styled(SubmitButton)`
   margin-top: 0px;
   background-color: white;
+  font-weight: bold;
+  border: 1px solid #dddddd;
+  color: black;
+  &:hover { background-color: lightgray }
+`; 
+
+export const KakaoButton = styled(SubmitButton)`
+  margin-top: 0px;
+  background-color: #FEE500;
   font-weight: bold;
   border: 1px solid #dddddd;
   color: black;

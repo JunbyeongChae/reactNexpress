@@ -1,5 +1,21 @@
 import axios from "axios";
 
+export const memberListDB = (params) => {
+  console.log(params);
+  return new Promise((resolve, reject) => {
+    try {
+      const response = axios({
+        method: "get",
+        url: process.env.REACT_APP_SPRING_IP+"member/memberList",
+        params: params,
+      });
+      resolve(response);
+    } catch (error) {
+      reject(error);
+    }
+  })
+}
+
 //QuillEditor에서 이미지 선택시 express서버에 업로드 처리 요청하기
 export const uploadImageDB = (file) => {
     //사용자가 입력한 값 출력하기
@@ -39,41 +55,82 @@ export  const boardListDB = (params) => {
     });
 }//end of boardListDB
 
-export const boardInsertDB = (board) => {
-  //사용자가 입력한 값 출력하기
-  console.log(board)
-  return new Promise((resolve, reject) => {
-      try{
-          const response = axios({
-              method: "post",
-              url: process.env.REACT_APP_EXPRESS_IP+"users/board/insert",
-              headers: {
-                  "Content-Type":"application/json"
-              },
-              data: board
-          })
-          resolve(response)
-      }catch(error){
-          reject(error)
-      }
-  })
+//게시글 쓰기구현
+export const  boardInsertDB = (board) => {
+    //사용자가 입력한 값 출력하기
+    console.log(board)
+    return new Promise((resolve, reject) => {
+        try{
+            const response = axios({
+                method: "post",
+                url: process.env.REACT_APP_EXPRESS_IP+"users/board/insert",
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                data: board
+            })
+            resolve(response)
+        }catch(error){
+            reject(error)
+        }
+    })
 }//end of boardInsertDB
 
 export  const boardDetailDB = (b_no) => {
-  //파라미터 값을 출력해 보기 - SELECT * FROM board WHERE n_no=?
-  console.log(b_no) //목록에서 제목을 클릭했을 때 그 row의 n_no를 가져온다.
-  return new Promise((resolve, reject) => {
-      try{
-          const response = axios({
-              method: "get",
-              url: process.env.REACT_APP_EXPRESS_IP + "users/board/detail/"+b_no,
-          });
-          resolve(response) //성공했을 때
-      }catch(error){
-          reject(error);//실패했을 때
-      }//end of try..catch
-  });
-}//end of boardDetailDB
+    //파라미터 값을 출력해 보기 - SELECT * FROM react_board WHERE b_no=?
+    console.log(b_no) //목록에서 제목을 클릭했을 때 그 row의 n_no를 가져온다.
+    return new Promise((resolve, reject) => {
+        try{
+            const response = axios({
+                method: "get",
+                url: process.env.REACT_APP_EXPRESS_IP + "users/board/detail/"+b_no,
+            });
+            resolve(response) //성공했을 때
+        }catch(error){
+            reject(error);//실패했을 때
+        }//end of try..catch
+    });
+}//end of boardListDB
+
+//게시글 수정하기
+export const boardUpdateDB = (board) => {
+    //사용자가 입력한 값 출력하기
+    console.log(board)
+    return new Promise((resolve, reject) => {
+        try{
+            const response = axios({
+                method: "put",
+                url: process.env.REACT_APP_EXPRESS_IP+"users/board/update/"+board.b_no,
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                data: board //get방식 : params
+            })
+            resolve(response)
+        }catch(error){
+            reject(error)
+        }
+    })
+}//end of boardUpdateDB
+
+//게시글 삭제하기
+//공지글 삭제
+export  const boardDeleteDB = (b_no) => {
+    //파라미터 값을 출력해 보기 - DELETE FROM notice WHERE n_no=?
+    console.log(b_no) //목록에서 제목을 클릭했을 때 그 row의 n_no를 가져온다.
+    return new Promise((resolve, reject) => {
+        try{
+            const response = axios({
+                method: "delete",
+                url: process.env.REACT_APP_EXPRESS_IP + "users/board/delete/"+b_no,
+            });
+            resolve(response) //성공했을 때
+        }catch(error){
+            reject(error);//실패했을 때
+        }//end of try..catch
+    });
+}//end of noticeListDB
+
 
 export  const noticeListDB = (params) => {
     //파라미터 값을 출력해 보기 - SELECT * FROM notice WHERE n_content like '%'||?||'%'

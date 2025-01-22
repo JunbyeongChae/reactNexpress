@@ -27,6 +27,13 @@ const BoardDBWrite = () => {
       b_content: content
     }
     const res = await boardInsertDB(board)
+    console.log(res.data) //{success:true, result:1}
+    const isOk = res.data.success
+    if(isOk === true){
+      navigate("/board")
+    }else{
+      console.log("글쓰기 실패")
+    }
 
   }
   //함수의 메모이제이션은 useCallback으로 처리하고 변수에 대한 메모이제이션은 useMemo처리함.
