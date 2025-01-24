@@ -1,14 +1,23 @@
 /* global daum */
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MyButton, MyH1, MyInput, MyLabel, MyLabelAb, PwEye, SignupForm, SubmitButton, WarningButton } from '../../styles/FormStyles';
 import { Form } from 'react-bootstrap';
 import { checkPassword, validateBirthdate, validateEmail, validateHp, validateName, validateNickname, validatePassword } from '../../service/validateLogic';
-import { data } from 'react-router';
+import { memberInsertDB, memberListDB } from '../../service/dbLogic';
 import { setToastMsg } from '../../redux/toastStatus/action';
-import { memberListDB } from '../../service/dbLogic';
+import { linkEmail, onAuthChange } from '../../service/authLogic';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router';
 //회원가입 페이지와 내정보 수정 페이지의 디자인 같다. - 고려해서 디자인 처리해 본다.
 const Signup = ({update}) => {
-    console.log('window.location.search : '+window.location.search)
+    //구글 로그인 상태 체크
+    const userAuth = useSelector(state => state.userAuth)
+    //감속기 호출
+    const dispatch = useDispatch()
+    //화면 전환- 라우트
+    const navigate = useNavigate()
+    //http://localhost:8000/xxxx?type=auth
+    console.log('window.location.search : '+window.location.search) //?type=auth
     const type = window.location.search.split('&')[0].split('=')[1]
     console.log('type : '+type);
     const [reSignCheck, setReSignCheck] = useState(false)
@@ -51,7 +60,17 @@ const Signup = ({update}) => {
         nickname: "*",
         birthday: "*",
     })
+    //소셜 로그인 상태에서 구글계정정보를 담기
     const [googleEmail, setGoogleEmail] = useState('')
+    useEffect(()=>{
+        const onAuth = async() =>{
+            const user = await onAuthChange(userAuth.auth)
+            if(user){
+                setGoogleEmail(user.email)
+            }
+        }
+        onAuth()
+    },[setGoogleEmail, userAuth.auth])
     //사용자가 정보를 입력하면 상태가 변경될 때마다 호출
     const changeMemInfo = (e) => {
         const id = e.currentTarget.id
@@ -81,33 +100,35 @@ const Signup = ({update}) => {
         else if(key === 'birthday'){
             result = validateBirthdate(e);
         }
-    }
+        setComment({...comment, [key]:result})
+    }//end of validate
     //중복검사 대상 컬럼은  이메일 중복검사와 닉네임 중복 검사
-    const overlap = async (key) => {//key :  email or nickname
-      console.log('overlap')
+    const overlap = async(key) => {//key :  email or nickname
+        console.log('overlap : comment[key] - '  + comment[key]+', key : ' + key)
         try {
-          // if(comment[key] !=='중복확인을 해주세요.'){
-          //   return;
-          // }
-          let params;
-          if(key === 'email'){
-            params = {MEM_EMAIL : memInfo[key], type : 'overlap'}
-          }else{
-            params = {MEM_NICKNAME : memInfo[key], type : 'overlap'}
-          }
-          console.log('Params being sent:', params);
-          let response = {data:0};
-          response = await memberListDB(params);
-          console.log(response.data)
-          if(response.data === 1){
-            setComment({...comment, [key]: `${key==='email'?'이메일':'닉네임'}은 사용할 수 없습니다.`})
-            dispatchEvent(setToastMsg(`${key==='email'?'이메일':'닉네임'}은 사용할 수 없습니다.`))
-            setStar({...star, [key]: '*'})
-          }else if(response.data === 0){
-            setComment({...comment, [key]: `${key==='email'?'이메일':'닉네임'}은 사용할 수 있습니다.`})
-            dispatchEvent(setToastMsg(`${key==='email'?'이메일':'닉네임'}은 사용할 수 있습니다.`))
-            setStar({...star, [key]: ''})
-          }
+            if(comment[key] !== '중복확인을 해주세요.'){
+                return //if문 에서 return 함수를 빠져나간다.
+            }//end of if
+            let params;
+            if(key === 'email'){
+                params = { MEM_EMAIL: memInfo[key], type:'overlap'}
+            }
+            else{
+                params = { MEM_NICKNAME: memInfo[key], type:'overlap'}
+            }
+            let response = {data: 0} //0이면 사용이 가능한 이메일(또는 니네임입니다.), 1이면 사용할 수 없는 이메일(또는 닉네임)
+            console.log(params)
+            response = await memberListDB(params)
+            console.log(response.data) // 1 또는 0이 출력되는지 확인할 것 - 백엔드 엔지니어가 확인할 내용
+            if(response.data ===1){//넌 사용할 수 없어
+                setComment({...comment, [key]: `해당 ${key ==='email'? '이메일':'닉네임'}은 사용할 수 없습니다.`})
+                dispatchEvent(setToastMsg( `해당 ${key ==='email'? '이메일':'닉네임'}은 사용할 수 없습니다.`))
+                setStar({...star, [key]:"*"})
+            }else if(response.data === 0 ){//넌 사용할 수 있어
+                setComment({...comment, [key]: `해당 ${key ==='email'? '이메일':'닉네임'}은 사용할 수 있습니다.`})
+                dispatchEvent(setToastMsg( `해당 ${key ==='email'? '이메일':'닉네임'}은 사용할 수 있습니다.`))
+                setStar({...star, [key]:""})
+            }
         } catch (error) {
             console.error(error)
         }
@@ -148,8 +169,39 @@ const Signup = ({update}) => {
     const pwdUpdate = () => {
 
     }
-    const signup = () => {
-
+    const signup = async() => {
+        console.log('signup호출')
+        try {
+            let uid;
+            if(googleEmail){
+                uid = await linkEmail(userAuth.auth, memInfo)
+            }
+            console.log(uid)
+            const b = memInfo.birthday
+            let birthday = ''
+            if(b!==""){
+                birthday = b.slice(0,4)+'-'+b.slice(4,6)+'-'+b.slice(6,8)
+            }
+            const datas = {
+                MEM_UID:uid,
+                MEM_PW: memInfo.password, 
+                MEM_NAME: memInfo.name,
+                MEM_EMAIL: memInfo.email,
+                MEM_BIRTHDAY: birthday,
+                MEM_TEL: memInfo.hp,
+                MEM_NICKNAME: memInfo.nickname,
+                MEM_ZIPCODE: post.postNum, 
+                MEM_ADDR: post.post,
+                MEM_ADDR_DTL: post.postDetail,
+                MEM_AUTH: (type === 'member'?1:2), //1이면 일반회원 2이면 코치회원
+                MEM_GENDER: memInfo.gender,
+                MEM_STATUS: 1
+            }//end of datas
+            console.log(datas)
+            const res = await memberInsertDB(datas)
+        } catch (error) {
+            
+        }
     }
     const openZipcode = () => {
         new daum.Postcode({
@@ -180,7 +232,7 @@ const Signup = ({update}) => {
         if(submitBtn.hover){
             setSubmitBtn({...submitBtn, hover: false, bgColor:'rgb(105, 175, 245'})
         }else{
-        setSubmitBtn({...submitBtn, hover: true, bgColor:'rgb(58, 129, 200'})
+            setSubmitBtn({...submitBtn, hover: true, bgColor:'rgb(58, 129, 200'})
         }
     }//토글 버튼 마우스 올려놓았을 때
     const signUpdate = () => {
@@ -277,9 +329,8 @@ const Signup = ({update}) => {
                     {Checkbox}
                 </div>
                 </MyLabel>
-                <SubmitButton type="button" disabled={submitBtn.disabled} style={{backgroundColor:submitBtn.bgColor }}
-                onClick={()=>{if(update){signUpdate()}else{signup()}}} onMouseEnter={toggleHover} onMouseLeave={toggleHover}>
-                    {update?'수정하기':'가입하기'}
+                <SubmitButton type="button"  style={{backgroundColor:submitBtn.bgColor }}onClick={signup} >
+                    가입하기
                 </SubmitButton>
                 { update&&
                 <>

@@ -16,7 +16,7 @@ const authLogic = new AuthLogic(app)
 const store = legacy_createStore(rootReducer)
 store.dispatch(setAuth(authLogic.getUserAuth(), authLogic.getGoogleAuthProvider()))
 //getState함수는 리덕스에서 제공하는 함수로 상태값을 확인함.
-console.log(store.getState())
+console.log(store.getState()) //redux>toastStatus(토스트메시지처리:bool, msg), userAuth(인증상태)
 
 const root = ReactDOM.createRoot(document.querySelector('#root'));
 root.render(

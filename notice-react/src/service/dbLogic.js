@@ -1,5 +1,38 @@
 import axios from "axios";
 
+//회원가입 구현 - 소설로그인한 경우, 일반회원, 코치회원
+//비번이 포함되어 있어서 post방식
+
+export const memberInsertDB = (datas) => {
+    //파라미터로 넘어온 사용자가 입력한 값 확인하기
+    console.log(datas) //postman 테스트할 때 body>raw>{} Object
+    //함수의 리턴타입으로 함수를 쓸 수 있다. - 고차함수
+    //리액트에서 회원가입 버튼을 클릭하면 이 함수가 호출됨.
+    //백엔드 스프링부트(8000번)의 URL이름을 호출한다.
+    //3000번에서 8000번으로 요청이 일어난다. - CORS
+    //2개의 다른 서버를 활용하므로 지연이 발생함. - 비동기로 처리한다.
+    //insert하는 동안 시간이 걸림 - waiting(자바스레드)- 
+    //클라이언트에서는 주기적으로 서버에 확인한다. - 준비됐어.(0)
+    //요청을 했어(전송했어-1- send{get,post, put,delete})- 처리중이야- 2
+    //처리해서 업로드 중이야(3) - 도착했어(4)
+    //4가지 상태를 파악하고 추적해서 4번일 때 함수를 호출해줘(함수 호출을 약속할께 -callback- 자동)
+    //내가 호출하는 것이 아니다. 콜백함수는 개발자 호출하는게 아니야 -> 시스템이 -> 
+    //0->1->2->3->4 - intercept(관여한다.)
+    return new Promise((resolve, reject) => {//resolve와reject콜백함수이다.
+        try {
+            const res = axios({
+                method: 'post',
+                url: process.env.REACT_APP_SPRING_IP+'member/memberInsert',
+                data: datas,
+            })
+            resolve(res)
+        } catch (error) {
+            //에러 발생
+            reject(error)            
+        }
+    })
+}//end of memberInsert - 회원가입(커밋과 롤백 : 환경설정-일괄처리)
+
 //소셜 로그인한 경우 우리 회원테이블에 등록되어있는지 유무 체크
 export const memberListDB = (params) => {
     console.log(params)//{MEM_UID:user.uid, type:'auth'}

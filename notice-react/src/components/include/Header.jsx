@@ -6,9 +6,14 @@ import { logout } from '../../service/authLogic'
 
 const Header = () => {
   const userAuth = useSelector(state => state.userAuth) //authLogic.js
+  //Header함수가 최초 호출되면 email상태값은 빈문자열이다.
   const [email, setEmail] = useState("") //디폴트문자열가짐->로그인-> localStorage
   const [isLoggedIn, setIsLoggedIn] = useState(false) //로그인 상태 관리
   //email 이 존재할때 와 email이 존재하지 않을 때
+  //useEffect무조건 함수가 호출될 때 최초 한 번은 실행이 된다.(static 블록)
+  //최초값이 빈문자열이다.-localStorage저장된 email읽기
+  //localStorage에 email정보는 언제 담아주었나? - > App.jsx-> useEffect -> 구글상태값 체크함수 -> 오라클 DB조회하고
+  //조회된 결과가 있으면 그 때 저장됨.
   useEffect(()=>{
     //의존성 배열에 있는 값이 변경될 때 마다  useEffect다시 호출된다.
     const email = localStorage.getItem("email")

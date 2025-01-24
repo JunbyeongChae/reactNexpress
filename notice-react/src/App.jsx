@@ -39,6 +39,7 @@ const App = () => {
   const dispatch = useDispatch()
   const auth = localStorage.getItem("auth") //접근권한
   //status -> 0이면 일반회원, 1이면 코치
+  //-> http://localhost:3000/index.html
   useEffect(() => {
     const asyncCloud = async() => {
       //현재 로그인 상태가 유지되고 있을 때
@@ -49,52 +50,48 @@ const App = () => {
       //로그인 되어 있는 상태에서 회원가입이 된 사람인지를 체크하기
       //너 구글로 로그인 한 경우라면 반드시 회원가입을 별도로 해야 돼
       //회원권 양도, 수업신청
+      if(user !=null){
+        //user.emailVerified값을 비교할 수 있다.
+        if(!user.emailVerified){//false이면 true가 된다.
+          //구글 로그인 상태가 아니다. -> 소셜로그인있고 사용자가 회원가입해서 진행되는 로그인 - 2가지가 존재함
 
-      if(user){
-        console.log(`${user.uid}, ${user.email} has signed in`)
-        if(localStorage.getItem('auth') === null || !localStorage.getItem('auth')){
-          //로그인은 되어 있는 상태인데 auth가 없다면 회원가입이 넌 안되어 있다.
-          //일단 오라클 DB에서 member250120테이블에 해당 이메일이 있는지 체크
-          const res = await memberListDB({MEM_UID: user.uid, type: 'auth'})
-          console.log(res)
-          //오라클 서버에서 사용자 정보가 존재하고 그 결과를 res에 담았다면 
-          //로컬스토리지에 담기
-          if(res.data){
-            localStorage.setItem("uid", res.data.MEM_UID)
-            localStorage.setItem("email", res.data.MEM_EMAIL)
-            localStorage.setItem("nickname", res.data.MEM_NICKNAME)
-            localStorage.setItem("status", res.data.MEM_STATUS)
-            localStorage.setItem("auth", res.data.MEM_AUTH)
-            localStorage.setItem("no", res.data.MEM_NO)
-            //현재 로그인 되어 있는 상태인지 확인하였고 오라클 서버에서 응답으로 받은 정보들을
-            //(res.data다음에 대문자 이름들은 모두 오라클 연동시 myBatis를 사용하여 map에 자동으로
-            //담아주는 과정에서 myBatis가 키값을 무조건 디폴트로 대문자로 처리하는 과정으로 결정됨)
-            //로컬 스토리지에 저장해둠.
-            //화면 전환을 해준다.
-            navigate("/")
-            return
-          }//end of if - 오라클 서버에서 응답으로 받은 정보를 로컬스토리지에 저장
-        }//end of ath 정보가 없으면
-        //로그인 성공이면 user.emailVerified = true
-        if(!user.emailVerified){
-          console.log('구글 로그인 상태가 아닐 때 실행됨')
-          if(pathname !== '/auth/emailVerified'){
-            navigate("/auth/emailVerified")
+        }else{//user.emailVerified가 true이다.
+          //당신은 이미 회원가입이 되어 있습니다. - 기준값
+          //uid or email 가지고 오라클 서버로 가서 SELECT * FROM member250120
+          //WHERE mem_uid = 'google1';      
+          //localStorage 있는 값 중에서 선택할 것.
+          console.log(`${user.uid}, ${user.email} has signed in.`)
+          if(user.uid !==null || user.email !==null){
+            const res = await memberListDB({MEM_UID:user.uid, type:'auth'})
+            console.log(res)//참이면 있다. 거짓이면 없다.
+            //만일 조회결과가 존재한다면 이미 회원가입이 된 상태임
+            //추가적인 상태값을 관리한다.(쿠키나 세션, localStorage)
+            console.log(typeof res.data)
+            console.log(res.data)
+            console.log(res.data.length)
+            if(res.data.length > 0){
+              console.log('if문 실행')
+              //상태값에 null이 오는 경우 미리 점검 - MemberController -> MemberLogic(memberList():Object3가지 경우의 수) -> MemberDao
+              //1)이메일중복검사와 닉네임중복검사-하나로 묶음, 2)이메일 찾기, 3)회원 조회
+              //리턴타입 1)list.size():0이면 사용할 수 있다. 1이면 사용불가하다. 왜냐면 이미 있는 이메일이니까
+              //2)String- 너가 찾는 이메일 이거야, 3)List<Map<>> 4)Map - 한 건일 때 - 소셜로그인 처리경우를 비교해서 회원가입유도하기
+              localStorage.setItem('uid', res.data.MEM_UID)
+              localStorage.setItem('email', res.data.MEM_EMAIL)
+              localStorage.setItem('nickname', res.data.MEM_NICKNAME)
+              localStorage.setItem('status', res.data.MEM_STATUS) //다시 정리
+              localStorage.setItem('auth', res.data.MEM_AUTH)
+              localStorage.setItem('no', res.data.MEM_NO) //pk값은 관리
+            }
+            //너의 uid나 email로 오라클 서버에 member250120테이블에 찾아보니까 너가 없어
+            else{
+              console.log('else문 실행')
+              //이 조건을 수렴하면 해당 구글 계정은 회원가입 대상입니다. 회원가입을 부탁드립니다.
+              dispatch(setToastMsg(' 해당 구글 계정은 회원가입 대상입니다. 회원가입을 부탁드립니다.'))
+              navigate('/auth/signup')
+            }
           }
-        }//end of emailVerfied가 false일 때 실행됨
-        else if(!localStorage.getItem('auth')||localStorage.getItem('auth')==='undefined'||localStorage.getItem('auth')===''){
-          //회원 가입 대상이 아닌 경우에 메시지를 출력 하지 않음
-          if(auth && auth!=='undefined'&&auth !==''){
-            dispatch(setToastMsg('회원가입 정보가 이미 존재합니다.'))
-            return
-          }
-          if(pathname !=='/auth/signup'){
-            dispatch(setToastMsg("해당 구글 계정은 회원가입 대상 입니다. 회원가입을 부탁드립니다."))
-            navigate('/auth/signup')
-          }
-        }//end else if
-
-      }//end of user
+        }
+      }//end of user - 크롬에서 로그인상태중이고 구글에서 쥐고 있는 값이 있을 때 처리하는 부분
     }//end of asyncCloud
     asyncCloud()
   },[userAuth.auth, pathname, auth, dispatch])//end of useEffect
