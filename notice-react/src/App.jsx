@@ -26,6 +26,8 @@ import { memberListDB } from "./service/dbLogic";
 import SignupPage from "./components/pages/auth/SignupPage";
 import { setToastMsg } from "./redux/toastStatus/action";
 import EmailVerifiedPage from "./components/pages/auth/EmailVerifiedPage";
+import FindEmailPage from "./components/pages/auth/FindEmailPage";
+import ResetPwdPage from "./components/pages/auth/ResetPwdPage";
 //App이 실행될 때 로그인 상태인지를 체크하기
 const App = () => {
   //Route의 path와 Header의 Link to는 일치해야 한다.
@@ -112,6 +114,8 @@ const App = () => {
             <Route path="/login" exact={true} element={<LoginPage />}/>
             <Route path="/auth/signup" exact={true} element={<SignupPage />}/>
             <Route path="/auth/emailVerified" exact={true} element={<EmailVerifiedPage />}/>
+            <Route path="/auth/findEmail" exact={true} element={<FindEmailPage />}/>
+            <Route path="/auth/resetPwd" exact={true} element={<ResetPwdPage />}/>
             <Route path="/board" exact={true} element={<BoardDBList />}/>
             <Route path="/board/write" exact={true} element={<BoardDBWrite />}/>
             <Route path="/board/:b_no" exact={true} element={<BoardDBDetail />}/>

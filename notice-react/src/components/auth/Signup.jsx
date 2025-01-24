@@ -1,9 +1,16 @@
+/* global daum */
 import React, { useState } from 'react'
 import { MyButton, MyH1, MyInput, MyLabel, MyLabelAb, PwEye, SignupForm, SubmitButton, WarningButton } from '../../styles/FormStyles';
 import { Form } from 'react-bootstrap';
 import { checkPassword, validateBirthdate, validateEmail, validateHp, validateName, validateNickname, validatePassword } from '../../service/validateLogic';
+import { data } from 'react-router';
+import { setToastMsg } from '../../redux/toastStatus/action';
+import { memberListDB } from '../../service/dbLogic';
 //회원가입 페이지와 내정보 수정 페이지의 디자인 같다. - 고려해서 디자인 처리해 본다.
-const Signup = (update) => {
+const Signup = ({update}) => {
+    console.log('window.location.search : '+window.location.search)
+    const type = window.location.search.split('&')[0].split('=')[1]
+    console.log('type : '+type);
     const [reSignCheck, setReSignCheck] = useState(false)
     const [post, setPost] = useState({
         post: '',
@@ -76,9 +83,31 @@ const Signup = (update) => {
         }
     }
     //중복검사 대상 컬럼은  이메일 중복검사와 닉네임 중복 검사
-    const overlap = (key) => {//key :  email or nickname
+    const overlap = async (key) => {//key :  email or nickname
+      console.log('overlap')
         try {
-            
+          // if(comment[key] !=='중복확인을 해주세요.'){
+          //   return;
+          // }
+          let params;
+          if(key === 'email'){
+            params = {MEM_EMAIL : memInfo[key], type : 'overlap'}
+          }else{
+            params = {MEM_NICKNAME : memInfo[key], type : 'overlap'}
+          }
+          console.log('Params being sent:', params);
+          let response = {data:0};
+          response = await memberListDB(params);
+          console.log(response.data)
+          if(response.data === 1){
+            setComment({...comment, [key]: `${key==='email'?'이메일':'닉네임'}은 사용할 수 없습니다.`})
+            dispatchEvent(setToastMsg(`${key==='email'?'이메일':'닉네임'}은 사용할 수 없습니다.`))
+            setStar({...star, [key]: '*'})
+          }else if(response.data === 0){
+            setComment({...comment, [key]: `${key==='email'?'이메일':'닉네임'}은 사용할 수 있습니다.`})
+            dispatchEvent(setToastMsg(`${key==='email'?'이메일':'닉네임'}은 사용할 수 있습니다.`))
+            setStar({...star, [key]: ''})
+          }
         } catch (error) {
             console.error(error)
         }
@@ -123,11 +152,24 @@ const Signup = (update) => {
 
     }
     const openZipcode = () => {
-
+        new daum.Postcode({
+            oncomplete: function(data) {
+            let addr = ''; 
+            if (data.userSelectedType === 'R') { 
+                addr = data.roadAddress;
+            } else { 
+                addr = data.jibunAddress;
+            }
+            setPost({...post, postNum:data.zonecode, post:addr}) ;
+            document.getElementById("post").value = addr;
+            document.getElementById("postDetail").focus();
+            }
+        }).open();
     }
     const checkboxLable = ['없음','남자','여자']
-    const Checkbox = checkboxLable.map((item, index)=> (
-        <Form.Check />
+    const Checkbox = checkboxLable.map((item, index) => (
+        <Form.Check inline label={item} value={item} name="group1" type='radio' checked={memInfo.gender===item?true:false} readOnly
+        id={`inline-radio-${item}`} key={index} onClick={(e)=> {setMemInfo({...memInfo, gender: e.target.value})}}/>
     ))
     const [submitBtn, setSubmitBtn] = useState({
         disabled: true,

@@ -1,20 +1,21 @@
 import axios from "axios";
 
+//소셜 로그인한 경우 우리 회원테이블에 등록되어있는지 유무 체크
 export const memberListDB = (params) => {
-  console.log(params);
-  return new Promise((resolve, reject) => {
-    try {
-      const response = axios({
-        method: "get",
-        url: process.env.REACT_APP_SPRING_IP+"member/memberList",
-        params: params,
-      });
-      resolve(response);
-    } catch (error) {
-      reject(error);
-    }
-  })
-}
+    console.log(params)//{MEM_UID:user.uid, type:'auth'}
+    return new Promise((resolve, reject)=> {
+        try {
+            const response = axios({
+                method: 'get',
+                url: process.env.REACT_APP_SPRING_IP+'member/memberList',
+                params: params
+            })            
+            resolve(response)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}//end of memberListDB
 
 //QuillEditor에서 이미지 선택시 express서버에 업로드 처리 요청하기
 export const uploadImageDB = (file) => {
